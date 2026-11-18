@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CanFIRE — Early Retirement Planner for Canadians</title>
+<meta name="description" content="Free, private, tax-optimized early retirement planner for Canadians. Runs entirely in your browser.">
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--ink:#14213d;--mute:#5b6577;--line:#e3e7ee;--brand:#c8102e;--brand2:#1f4e79;--ok:#1b8a5a;--warn:#c77700;--bad:#b42318;--c1:#1f4e79;--c2:#4f81bd}
+*{box-sizing:border-box}body{margin:0;font-family:Segoe UI,system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+header{display:flex;align-items:center;gap:14px;padding:12px 20px;background:var(--ink);color:#fff;position:sticky;top:0;z-index:20;flex-wrap:wrap}
+header h1{font-size:18px;margin:0;font-weight:600}header h1 span{color:#ff6b6b}
+header .sp{flex:1}header button,header label.btn{background:#ffffff1a;color:#fff;border:1px solid #ffffff40;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px}
+header button:hover{background:#ffffff33}
+.seg{display:inline-flex;border:1px solid #ffffff55;border-radius:6px;overflow:hidden}.seg button{border:0;border-radius:0;background:transparent}.seg button.on{background:#fff;color:var(--ink)}
+.wrap{display:grid;grid-template-columns:400px 1fr;gap:16px;padding:16px;align-items:start}
+aside{background:var(--card);border-radius:10px;border:1px solid var(--line);position:sticky;top:64px;max-height:calc(100vh - 80px);overflow:auto}
+details{border-bottom:1px solid var(--line)}details>summary{padding:12px 14px;font-weight:600;cursor:pointer;list-style:none;display:flex;justify-content:space-between}
+details>summary::after{content:'▾';color:var(--mute)}details:not([open])>summary::after{content:'▸'}
+.sec{padding:0 14px 14px}
+.row{display:grid;grid-template-columns:1fr 104px 104px;gap:6px;align-items:center;margin:5px 0}
+.row.one{grid-template-columns:1fr 150px}
+.row label{color:var(--mute);font-size:12.5px;line-height:1.25}.row label i{font-style:normal;cursor:help;color:var(--brand2);margin-left:3px}
+input,select{width:100%;padding:6px 7px;border:1px solid #cfd6e1;border-radius:6px;font-size:13px;font-family:inherit;background:#fff}
+input:focus,select:focus{outline:2px solid #4f81bd55;border-color:var(--c2)}
+.hdr{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);font-weight:600}
+.sub{font-size:11.5px;color:var(--mute);margin:6px 0 2px}
+main{min-width:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi .l{font-size:12px;color:var(--mute)}.kpi .v{font-size:22px;font-weight:700;margin-top:4px}.kpi .s{font-size:12px;color:var(--mute);margin-top:2px}
+.good{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-top:14px}
+.card h2{font-size:15px;margin:0 0 10px}
+.plan{display:grid;gap:8px}.plan div{padding:9px 12px;border-left:4px solid var(--c2);background:#f6f9fd;border-radius:4px;line-height:1.45}
+.plan div.k{border-color:var(--ok);background:#f2faf6}.plan div.w{border-color:var(--warn);background:#fff8ef}
+.tabs{display:flex;gap:4px;margin-top:14px;flex-wrap:wrap}.tabs button{border:1px solid var(--line);background:#fff;padding:8px 14px;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;color:var(--mute)}
+.tabs button.on{background:var(--card);color:var(--ink);font-weight:600;border-bottom-color:var(--card)}
+.pane{display:none;background:var(--card);border:1px solid var(--line);border-radius:0 10px 10px 10px;padding:16px}.pane.on{display:block}
+.chartbox{position:relative;height:340px}canvas{width:100%;height:100%;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0 0;font-size:12px;color:var(--mute)}.legend span::before{content:'';display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;background:var(--c);vertical-align:-1px}
+.tip{position:absolute;pointer-events:none;background:#14213dee;color:#fff;font-size:12px;padding:8px 10px;border-radius:6px;white-space:nowrap;display:none;z-index:5;line-height:1.5}
+table{border-collapse:collapse;width:100%;font-size:12.5px}th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{position:sticky;top:0;background:#eef2f7;font-weight:600;color:var(--ink)}td:first-child,th:first-child{text-align:left}
+.tblwrap{max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+tr.best td{background:#f2faf6;font-weight:600}tr.acc td{color:var(--mute)}tr.sh td{background:#fdf0ef}
+.btn2{background:var(--brand2);color:#fff;border:0;border-radius:6px;padding:7px 12px;cursor:pointer;font-size:13px}
+.note{font-size:12px;color:var(--mute);line-height:1.5}
+.busy{opacity:.55}
+footer{padding:10px 20px 24px;font-size:11.5px;color:var(--mute);text-align:center}
+@media(max-width:1100px){.wrap{grid-template-columns:1fr}aside{position:static;max-height:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Can<span>FIRE</span> · Early Retirement Planner 🇨🇦</h1>
+  <div class="sp"></div>
+  <div class="seg" id="dollarSeg"><button data-v="real" class="on">Today's $</button><button data-v="nom">Future $</button></div>
+  <button id="bSave" title="Your inputs are also saved automatically in this browser">💾 Export plan</button>
+  <label class="btn">📂 Import<input type="file" id="fLoad" accept=".json" hidden></label>
+  <button id="bCSV">⬇ CSV</button>
+  <button id="bReset">↺ Sample</button>
+</header>
+<div class="wrap">
+<aside id="form"></aside>
+<main>
+  <div class="kpis" id="kpis"></div>
+  <div class="card"><h2>Your action plan</h2><div class="plan" id="plan"></div></div>
+  <div class="tabs" id="tabs">
+    <button data-p="pNW" class="on">Net worth</button><button data-p="pCF">Cash flow</button><button data-p="pTax">Taxes</button>
+    <button data-p="pMC">Monte Carlo</button><button data-p="pCmp">Strategy compare</button><button data-p="pTbl">Year-by-year</button><button data-p="pHow">How it works</button>
+  </div>
+  <div class="pane on" id="pNW"><div class="chartbox"><canvas id="cNW"></canvas><div class="tip"></div></div><div class="legend" id="lNW"></div></div>
+  <div class="pane" id="pCF"><div class="chartbox"><canvas id="cCF"></canvas><div class="tip"></div></div><div class="legend" id="lCF"></div>
+    <p class="note">Bars show where each year's cash comes from; the line is spending + tax. Bars above the line = surplus routed to TFSA (if room) then non-registered.</p></div>
+  <div class="pane" id="pTax"><div class="chartbox"><canvas id="cTax"></canvas><div class="tip"></div></div><div class="legend" id="lTax"></div>
+    <p class="note" id="taxNote"></p></div>
+  <div class="pane" id="pMC"><div class="chartbox"><canvas id="cMC"></canvas><div class="tip"></div></div><div class="legend" id="lMC"></div>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
+      <button class="btn2" id="bSolve">Find max spending for target success</button>
+      <span class="note">Target success: <input id="succT" type="number" value="90" style="width:60px">%</span><span id="solveOut" class="note"></span></div></div>
+  <div class="pane" id="pCmp"><div class="tblwrap"><table id="tCmp"></table></div><p class="note">All values in today's dollars. "After-tax estate" deducts deemed-disposition tax on RRSP/RRIF and unrealized gains at the end of the plan. Success = share of Monte Carlo paths that never run short.</p></div>
+  <div class="pane" id="pTbl"><div class="tblwrap"><table id="tYr"></table></div></div>
+  <div class="pane" id="pHow"><div class="note" style="font-size:13px;color:var(--ink)" id="how"></div></div>
+</main>
+</div>
+<footer>CanFIRE runs entirely in your browser — no data is sent anywhere. Educational planning tool only; not financial, tax or legal advice.</footer>
+<script>
+// ===================== CanFIRE TAX & BENEFIT ENGINE (2026 base year) =====================
+const INF = Infinity;
+const FED = {
+  br: [[58523, .14], [117045, .205], [181440, .26], [258482, .29], [INF, .33]],
+  low: .14, bpaMax: 16452, bpaMin: 14829, bpaLo: 181440, bpaHi: 258482,
+  age: 9208, ageThr: 46432, pension: 2000, dtc: .150198, oasThr: 95323
+};
+// Provincial 2026 brackets/BPA per CRA & provincial sources. Age/pension amounts & DTC rates are close approximations (editable in code).
+const PROV = {
+  SK: { n: 'Saskatchewan', br: [[54532, .105], [155805, .125], [INF, .145]], bpa: 20381, age: 5901, ageThr: 43927, pension: 1000, dtc: .11, senior: 2569 },
+  AB: { n: 'Alberta', br: [[61200, .08], [154259, .10], [185111, .12], [246813, .13], [370220, .14], [INF, .15]], bpa: 22769, age: 6345, ageThr: 47234, pension: 1719, dtc: .0812 },
+  BC: { n: 'British Columbia', br: [[50363, .056], [100728, .077], [115648, .105], [140430, .1229], [190405, .147], [265545, .168], [INF, .205]], bpa: 13216, age: 5927, ageThr: 44119, pension: 1000, dtc: .12 },
+  MB: { n: 'Manitoba', br: [[47564, .108], [101200, .1275], [INF, .174]], bpa: 15780, age: 3728, ageThr: 27749, pension: 1000, dtc: .08 },
+  ON: { n: 'Ontario', br: [[53891, .0505], [107785, .0915], [150000, .1116], [220000, .1216], [INF, .1316]], bpa: 12989, age: 6348, ageThr: 47268, pension: 1796, dtc: .10, ontario: true },
+  QC: { n: 'Quebec', br: [[54345, .14], [108680, .19], [132245, .24], [INF, .2575]], bpa: 18952, age: 3986, ageThr: 44000, pension: 3374, dtc: .117, abatement: .165 },
+  NB: { n: 'New Brunswick', br: [[52333, .094], [104666, .14], [193861, .16], [INF, .195]], bpa: 13664, age: 5955, ageThr: 44333, pension: 1000, dtc: .14 },
+  NS: { n: 'Nova Scotia', br: [[30995, .0879], [61991, .1495], [97417, .1667], [157124, .175], [INF, .21]], bpa: 11932, age: 5734, ageThr: 30828, pension: 1173, dtc: .0885 },
+  PE: { n: 'Prince Edward Island', br: [[33928, .095], [65820, .1347], [106890, .166], [142250, .1762], [INF, .19]], bpa: 15000, age: 6510, ageThr: 36600, pension: 1000, dtc: .105 },
+  NL: { n: 'Newfoundland & Labrador', br: [[44678, .087], [89354, .145], [159528, .158], [223340, .178], [285319, .198], [570638, .208], [1141275, .213], [INF, .218]], bpa: 13094, age: 7184, ageThr: 39000, pension: 1000, dtc: .063 },
+  YT: { n: 'Yukon', br: [[58523, .064], [117045, .09], [181440, .109], [500000, .128], [INF, .15]], bpa: 16452, age: 9208, ageThr: 46432, pension: 2000, dtc: .1202 },
+  NT: { n: 'Northwest Territories', br: [[53003, .059], [106009, .086], [172346, .122], [INF, .1405]], bpa: 18198, age: 8727, ageThr: 46432, pension: 1000, dtc: .115 },
+  NU: { n: 'Nunavut', br: [[55801, .04], [111602, .07], [181439, .09], [INF, .115]], bpa: 19659, age: 21000, ageThr: 46432, pension: 2000, dtc: .0551 }
+};
+const BEN = { cppMax65: 1507.65 * 12, oasMax: 8988 };
+const RRIF = { 71: .0528, 72: .054, 73: .0553, 74: .0567, 75: .0582, 76: .0598, 77: .0617, 78: .0636, 79: .0658, 80: .0682, 81: .0708, 82: .0738, 83: .0771, 84: .0808, 85: .0851, 86: .0899, 87: .0955, 88: .1021, 89: .1099, 90: .1192, 91: .1306, 92: .1449, 93: .1634, 94: .1879 };
+function rrifFactor(age) { if (age < 71) return 1 / (90 - age); return age >= 95 ? .2 : RRIF[age]; }
+function cppAdj(a) { return a < 65 ? 1 - .072 * (65 - a) : 1 + .084 * (Math.min(a, 70) - 65); }
+function oasAdj(a) { return 1 + .072 * (Math.min(a, 70) - 65); }
+
+function bracketTax(inc, br, f) {
+  let tax = 0, prev = 0;
+  for (const [top, rate] of br) {
+    const t = top * f;
+    if (inc > prev) tax += (Math.min(inc, t) - prev) * rate;
+    prev = t; if (inc <= t) break;
+  }
+  return tax;
+}
+function onHealth(ti) {
+  if (ti <= 20000) return 0;
+  if (ti <= 36000) return Math.min(300, .06 * (ti - 20000));
+  if (ti <= 48000) return Math.min(450, 300 + .06 * (ti - 36000));
+  if (ti <= 72000) return Math.min(600, 450 + .25 * (ti - 48000));
+  if (ti <= 200000) return Math.min(750, 600 + .25 * (ti - 72000));
+  return Math.min(900, 750 + .25 * (ti - 200000));
+}
+// inc: {ord, div, cg, pen, oas, age}
+function personTax(pc, inc, f) {
+  const P = PROV[pc];
+  const gross = inc.div * 1.38;
+  const ti = Math.max(0, inc.ord + gross + inc.cg * .5);
+  let fed = bracketTax(ti, FED.br, f);
+  let bpa = FED.bpaMax;
+  if (ti > FED.bpaLo * f) bpa = Math.max(FED.bpaMin, FED.bpaMax - (FED.bpaMax - FED.bpaMin) * (ti - FED.bpaLo * f) / ((FED.bpaHi - FED.bpaLo) * f));
+  let cr = bpa * f + Math.min(inc.pen, FED.pension);
+  if (inc.age >= 65) cr += Math.max(0, FED.age * f - .15 * Math.max(0, ti - FED.ageThr * f));
+  fed = Math.max(0, fed - cr * FED.low - gross * FED.dtc);
+  if (P.abatement) fed *= (1 - P.abatement);
+  const low = P.br[0][1];
+  let pt = bracketTax(ti, P.br, f);
+  let pcr = P.bpa * f + Math.min(inc.pen, P.pension);
+  if (inc.age >= 65) { pcr += Math.max(0, P.age * f - .15 * Math.max(0, ti - P.ageThr * f)); if (P.senior) pcr += P.senior * f; }
+  pt = Math.max(0, pt - pcr * low - gross * P.dtc);
+  if (P.ontario) pt += .2 * Math.max(0, pt - 5818 * f) + .36 * Math.max(0, pt - 7446 * f) + onHealth(ti);
+  const claw = inc.oas > 0 ? Math.min(inc.oas, .15 * Math.max(0, ti - FED.oasThr * f)) : 0;
+  return { total: fed + pt + claw, fed, prov: pt, claw, ti };
+}
+// Household tax with pension income splitting (tests several split amounts, keeps the lowest)
+function householdTax(pc, incs, eligs, f) {
+  if (incs.length === 1) { const r = personTax(pc, incs[0], f); return { total: r.total, claw: r.claw, per: [r], split: 0 }; }
+  const base = incs.map(x => personTax(pc, x, f));
+  const hi = base[0].ti >= base[1].ti ? 0 : 1, lo = 1 - hi;
+  const xMax = Math.min(.5 * eligs[hi], Math.max(0, (base[hi].ti - base[lo].ti) / 2));
+  let best = { total: base[0].total + base[1].total, claw: base[0].claw + base[1].claw, per: base, split: 0 };
+  if (xMax > 1) {
+    for (const x of [xMax, xMax * .5, xMax * .75]) {
+      const a = { ...incs[hi], ord: incs[hi].ord - x, pen: Math.max(0, incs[hi].pen - x) };
+      const b = { ...incs[lo], ord: incs[lo].ord + x, pen: incs[lo].pen + x };
+      const ra = personTax(pc, a, f), rb = personTax(pc, b, f);
+      if (ra.total + rb.total < best.total - .5) {
+        const per = []; per[hi] = ra; per[lo] = rb;
+        best = { total: ra.total + rb.total, claw: ra.claw + rb.claw, per, split: hi === 0 ? x : -x };
+      }
+    }
+  }
+  return best;
+}
+
+// ===================== SIMULATION =====================
+function simulate(I, S, rets) {
+  const P = I.persons, n = P.length, inf = I.inflation;
+  const t0 = Math.max(0, P[0].retAge - P[0].age);
+  const N = I.endAge - P[0].age;
+  const st = P.map(p => ({ rr: p.rrsp, tf: p.tfsa, room: p.tfsaRoom, nr: p.nonreg, acb: Math.min(p.nonregACB, p.nonreg), tfW: 0 }));
+  const order = S.tfsaFirst ? ['nr', 'tf', 'rr'] : ['nr', 'rr', 'tf'];
+  const rows = []; let fail = false, depleteAge = null, totTaxR = 0, totClawR = 0, totShortR = 0;
+  for (let t = 0; t <= N; t++) {
+    const f = Math.pow(1 + inf, t), r = rets ? rets[t] : I.ret;
+    const ages = P.map(p => p.age + t);
+    if (t > 0) st.forEach(s => { s.room += I.tfsaLimit * f + s.tfW; s.tfW = 0; });
+    if (t < t0) {
+      P.forEach((p, i) => {
+        const s = st[i];
+        s.rr += p.cRRSP * f;
+        const want = p.cTFSA * f, tc = Math.min(want, s.room);
+        s.tf += tc; s.room -= tc;
+        const toNr = p.cNR * f + (want - tc); s.nr += toNr; s.acb += toNr + s.nr * I.nrYield;
+        s.rr *= 1 + r; s.tf *= 1 + r; s.nr *= 1 + r;
+      });
+      rows.push({ t, f, ages, phase: 'acc', rr: sum(st, 'rr'), tf: sum(st, 'tf'), nr: sum(st, 'nr'), nw: sum(st, 'rr') + sum(st, 'tf') + sum(st, 'nr'),
+        spend: 0, cpp: 0, oas: 0, db: 0, work: 0, dist: 0, wRR: 0, wNR: 0, wTF: 0, tax: 0, claw: 0, invest: 0, short: 0, other: 0, ti: [0, 0], split: 0 });
+      continue;
+    }
+    const g = P.map((p, i) => {
+      const a = ages[i];
+      return {
+        cpp: a >= S.cpp[i] ? p.cpp65 * cppAdj(S.cpp[i]) * f : 0,
+        oas: a >= S.oas[i] ? BEN.oasMax * Math.min(1, p.oasYears / 40) * oasAdj(S.oas[i]) * (a >= 75 ? 1.1 : 1) * f : 0,
+        db: a >= p.dbStart && p.db > 0 ? p.db * Math.pow(1 + inf * p.dbIdx, t) : 0,
+        work: (a < p.workUntil ? p.work * f : 0)
+      };
+    });
+    const a0 = ages[0];
+    let mult = a0 < I.slowAge ? 1 : (a0 < I.nogoAge ? I.slowMult : I.nogoMult);
+    let oneTime = 0; for (const o of I.oneTimes) if (o.age === a0) oneTime += o.amt;
+    const spend = (I.spend * mult + oneTime) * f;
+    const windfall = (a0 === I.downAge ? I.downAmt * f : 0);
+    const dist = st.map(s => s.nr * I.nrYield);
+    const D = P.map(() => ({ rr: 0, nr: 0, tf: 0 }));
+    P.forEach((p, i) => { if (ages[i] >= 72) D[i].rr = Math.min(st[i].rr, st[i].rr * rrifFactor(ages[i] - 1)); });
+    if (S.melt > 0) P.forEach((p, i) => {
+      if (ages[i] >= (S.meltUntil || 999)) return;
+      const base = g[i].cpp + g[i].oas + g[i].db + g[i].work + dist[i] * (1 - I.nrElig) + dist[i] * I.nrElig * 1.38 + D[i].rr;
+      const room = S.melt * f - base;
+      if (room > 0) D[i].rr = Math.min(st[i].rr, D[i].rr + room);
+    });
+    const build = () => P.map((p, i) => {
+      const s = st[i];
+      const gain = s.nr > 0 ? D[i].nr * Math.max(0, 1 - s.acb / s.nr) : 0;
+      const pen = (ages[i] >= 65 ? D[i].rr : 0) + g[i].db;
+      return { inc: { ord: g[i].cpp + g[i].oas + g[i].db + g[i].work + D[i].rr + dist[i] * (1 - I.nrElig), div: dist[i] * I.nrElig, cg: gain, pen, oas: g[i].oas, age: ages[i] }, elig: pen };
+    });
+    const cashIn = () => { let c = windfall; P.forEach((p, i) => { c += g[i].cpp + g[i].oas + g[i].db + g[i].work + dist[i] + D[i].rr + D[i].nr + D[i].tf; }); return c; };
+    let tax, gap = 0, exhausted = false;
+    for (let it = 0; it < 60; it++) {
+      const b = build();
+      tax = householdTax(I.prov, b.map(x => x.inc), b.map(x => x.elig), f);
+      gap = spend + tax.total - cashIn();
+      if (gap < .5) break;
+      let need = gap;
+      for (const src of order) {
+        const av = P.map((p, i) => Math.max(0, st[i][src] - D[i][src]));
+        const tot = av[0] + (av[1] || 0);
+        if (tot <= .01) continue;
+        const take = Math.min(need, tot);
+        P.forEach((p, i) => { D[i][src] += take * av[i] / tot; });
+        need -= take; if (need <= .01) break;
+      }
+      if (need > .01) { exhausted = true; const b2 = build(); tax = householdTax(I.prov, b2.map(x => x.inc), b2.map(x => x.elig), f); gap = spend + tax.total - cashIn(); break; }
+    }
+    let short = 0, invest = 0;
+    const surplus = cashIn() - spend - tax.total;
+    if (gap > 1 && exhausted) { short = gap; fail = true; if (depleteAge === null) depleteAge = a0; }
+    else if (surplus > 0) {
+      invest = surplus; let left = surplus;
+      P.forEach((p, i) => { const c = Math.min(left / (n - i), st[i].room); st[i].tf += c; st[i].room -= c; left -= c; });
+      const rem = left; P.forEach((p, i) => { st[i].nr += rem / n; st[i].acb += rem / n; });
+    }
+    P.forEach((p, i) => {
+      const s = st[i];
+      if (s.nr > 0 && D[i].nr > 0) { s.acb -= D[i].nr * s.acb / s.nr; s.nr -= D[i].nr; }
+      s.rr -= D[i].rr; s.tf -= D[i].tf; s.tfW += D[i].tf;
+      s.rr = Math.max(0, s.rr) * (1 + r); s.tf = Math.max(0, s.tf) * (1 + r);
+      s.nr = Math.max(0, s.nr) * (1 + r - I.nrYield); s.acb = Math.max(0, Math.min(s.acb, s.nr + s.acb));
+    });
+    totTaxR += tax.total / f; totClawR += tax.claw / f; totShortR += short / f;
+    rows.push({
+      t, f, ages, phase: 'ret', spend, cpp: g.reduce((a, x) => a + x.cpp, 0), oas: g.reduce((a, x) => a + x.oas, 0), db: g.reduce((a, x) => a + x.db, 0),
+      work: g.reduce((a, x) => a + x.work, 0), dist: dist.reduce((a, x) => a + x, 0), other: windfall,
+      wRR: D.reduce((a, x) => a + x.rr, 0), wNR: D.reduce((a, x) => a + x.nr, 0), wTF: D.reduce((a, x) => a + x.tf, 0),
+      tax: tax.total, claw: tax.claw, split: tax.split, ti: tax.per.map(x => x.ti), invest, short,
+      rr: sum(st, 'rr'), tf: sum(st, 'tf'), nr: sum(st, 'nr'), nw: sum(st, 'rr') + sum(st, 'tf') + sum(st, 'nr')
+    });
+  }
+  const fE = Math.pow(1 + inf, N + 1);
+  const rrT = sum(st, 'rr'), tfT = sum(st, 'tf'), nrT = sum(st, 'nr'), gainT = st.reduce((a, s) => a + Math.max(0, s.nr - s.acb), 0);
+  const eTax = personTax(I.prov, { ord: rrT, div: 0, cg: gainT, pen: 0, oas: 0, age: 0 }, fE).total;
+  const estateR = (rrT + tfT + nrT - eTax) / fE;
+  return { rows, fail, depleteAge, estateR, estateTaxR: eTax / fE, lifeTaxR: totTaxR + eTax / fE, clawR: totClawR, shortR: totShortR, grossR: (rrT + tfT + nrT) / fE };
+}
+function sum(a, k) { return a.reduce((x, s) => x + s[k], 0); }
+function score(res) { return res.fail ? -1e12 + (res.depleteAge || 0) * 1e8 - res.shortR : res.estateR; }
+
+const MELTS = [0, 25000, 40000, 58523, 75000, 95323, 117045, 150000, 181440];
+function optimize(I) {
+  const P = I.persons;
+  const cppOpts = P.map(p => [...new Set([60, 65, 70].map(a => Math.max(a, Math.min(70, p.age))))]);
+  const oasOpts = P.map(p => [...new Set([65, 70].map(a => Math.max(a, Math.min(70, p.age))))]);
+  let best = null;
+  const combos = (arrs) => arrs.reduce((acc, arr) => acc.flatMap(c => arr.map(x => [...c, x])), [[]]);
+  for (const melt of MELTS) for (const cpp of combos(cppOpts)) for (const oas of combos(oasOpts)) {
+    const S = { melt, cpp, oas, tfsaFirst: false };
+    const r = simulate(I, S); const sc = score(r);
+    if (!best || sc > best.sc) best = { S, sc, r };
+  }
+  for (const melt of MELTS.slice(1)) for (const meltUntil of [65, 72]) {
+    const S = { ...best.S, melt, meltUntil }; const r = simulate(I, S); const sc = score(r);
+    if (sc > best.sc) best = { S, sc, r };
+  }
+  if (best.S.melt > 0) {
+    const i = MELTS.indexOf(best.S.melt);
+    if (i >= 0) {
+      const lo = MELTS[Math.max(0, i - 1)], hi = MELTS[Math.min(MELTS.length - 1, i + 1)];
+      for (let m = lo; m <= hi; m += (hi - lo) / 8 || 1e9) {
+        const S = { ...best.S, melt: Math.round(m / 500) * 500 }; const r = simulate(I, S); const sc = score(r);
+        if (sc > best.sc) best = { S, sc, r };
+      }
+    }
+  }
+  return best;
+}
+function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function genReturns(R, N, mu, sig) {
+  const s2 = Math.log(1 + sig * sig / ((1 + mu) * (1 + mu))), m = Math.log(1 + mu) - s2 / 2, s = Math.sqrt(s2);
+  const out = new Array(N + 1);
+  for (let i = 0; i <= N; i++) { let u = 0, v = 0; while (u === 0) u = R(); v = R(); const z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); out[i] = Math.exp(m + s * z) - 1; }
+  return out;
+}
+function monteCarlo(I, S, sims, seed) {
+  const R = rng(seed || 12345), N = I.endAge - I.persons[0].age;
+  let ok = 0; const nw = []; const est = [];
+  for (let k = 0; k < sims; k++) {
+    const res = simulate(I, S, genReturns(R, N, I.ret, I.vol));
+    if (!res.fail) ok++;
+    nw.push(res.rows.map(x => x.nw / x.f)); est.push(res.fail ? 0 : res.estateR);
+  }
+  const pct = (arr, p) => { const a = [...arr].sort((x, y) => x - y); return a[Math.min(a.length - 1, Math.floor(p * a.length))]; };
+  const bands = [.1, .25, .5, .75, .9].map(p => nw[0].map((_, t) => pct(nw.map(s => s[t]), p)));
+  return { success: ok / sims, bands, estP10: pct(est, .1), estP50: pct(est, .5) };
+}
+function maxSpend(I, S, mode, target, sims) {
+  let lo = 0, hi = I.spend * 3 + 50000;
+  for (let k = 0; k < 18; k++) {
+    const mid = (lo + hi) / 2, J = { ...I, spend: mid };
+    let ok;
+    if (mode === 'det') { const r = simulate(J, S); ok = !r.fail && r.estateR >= I.estateTarget; }
+    else ok = monteCarlo(J, S, sims, 777).success >= target;
+    if (ok) lo = mid; else hi = mid;
+  }
+  return lo;
+}
+if (typeof module !== 'undefined' && typeof window === 'undefined') module.exports = { simulate, optimize, monteCarlo, maxSpend, personTax, householdTax, PROV, FED };
+
+</script>
+<script>
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const fmt = v => (v < 0 ? '-' : '') + '$' + Math.round(Math.abs(v)).toLocaleString('en-CA');
+const fk = v => { const a = Math.abs(v); return (v < 0 ? '-' : '') + (a >= 1e6 ? '$' + (a / 1e6).toFixed(2) + 'M' : a >= 1e3 ? '$' + Math.round(a / 1e3) + 'K' : '$' + Math.round(a)); };
+const SAMPLE = {
+  couple: true, prov: 'SK', endAge: 95, inflation: 2.1,
+  p: [
+    { name: 'You', age: 48, retAge: 48, rrsp: 1600000, tfsa: 230000, tfsaRoom: 0, nonreg: 1200000, nonregACB: 850000, cRRSP: 0, cTFSA: 0, cNR: 0, work: 0, workUntil: 0, cpp65: 11500, oasYears: 40, db: 0, dbStart: 65, dbIdx: 0 },
+    { name: 'Partner', age: 47, retAge: 47, rrsp: 600000, tfsa: 210000, tfsaRoom: 0, nonreg: 300000, nonregACB: 240000, cRRSP: 0, cTFSA: 0, cNR: 0, work: 0, workUntil: 0, cpp65: 9500, oasYears: 40, db: 0, dbStart: 65, dbIdx: 0 }],
+  spend: 140000, slowAge: 75, slowMult: 85, nogoAge: 85, nogoMult: 75, oneTimes: '55:60000, 65:40000', downAge: 0, downAmt: 0, estateTarget: 0,
+  ret: 6, vol: 11, nrYield: 2.5, nrElig: 60, tfsaLimit: 7000, sims: 500,
+  mode: 'auto', melt: 58523, meltUntil: 0, cpp: [65, 65], oas: [65, 65], tfsaFirst: false
+};
+const STORE = 'canfire';
+let M = JSON.parse(localStorage.getItem(STORE) || localStorage.getItem('maplefire') || 'null') || structuredClone(SAMPLE);
+let VIEW = 'real', LAST = null;
+
+const H = {
+  prov: 'Province of residence. Drives provincial brackets, credits and dividend tax credit.',
+  endAge: 'Plan horizon — age of the first person. Using 95+ is prudent for early retirees.',
+  inflation: 'Long-run CPI. Tax brackets, CPP, OAS and spending are indexed at this rate.',
+  retAge: 'Household drawdown starts when the first person reaches this age. Before then, contributions below are added and nothing is withdrawn.',
+  rrsp: 'RRSP + RRIF + LIRA/LIF combined. Locked-in limits are not modelled (Saskatchewan lets you unlock 100% of a LIRA at 55 via PRIF).',
+  tfsaRoom: 'Unused TFSA room today. New room ($7,000/yr, indexed) and prior-year withdrawals are added automatically.',
+  nonregACB: 'Adjusted cost base — used to calculate capital gains when you sell.',
+  work: "Salary, consulting, or part-time income (today's $/yr) received during retirement until the age below.",
+  cpp65: "Your CPP at 65 in today's $/yr. 2026 maximum is ~$18,092. Early retirees often get 50–75% of max — use your My Service Canada estimate and reduce for years of no contributions.",
+  oasYears: 'Years of Canadian residence after age 18 (40 = full OAS).',
+  db: "Defined benefit pension (today's $/yr) and the age it starts. Indexing = % of CPI it rises by.",
+  spend: "After-tax household spending in today's dollars (excludes taxes). The model withdraws enough to cover this plus all income tax and OAS clawback.",
+  slow: 'Spending "smile": go-go → slow-go → no-go. Multipliers are % of base spending.',
+  oneTimes: 'One-off expenses at a given age of person 1, e.g. "55:60000, 62:45000" (today\'s $).',
+  down: 'Tax-free home downsizing proceeds (principal residence) received at this age. 0 = none.',
+  estateTarget: "Minimum after-tax estate (today's $) when solving for max spending.",
+  ret: 'Expected nominal annual portfolio return (after fees).', vol: 'Annual volatility (standard deviation) used in Monte Carlo.',
+  nrYield: 'Annual distributions from non-registered holdings (paid out & taxed each year).', nrElig: 'Share of those distributions that are Canadian eligible dividends (rest taxed as interest/foreign income).',
+  mode: 'Auto tests ~1,000 combinations of RRSP meltdown level, CPP and OAS start ages and picks the one with the largest after-tax estate while never running short.',
+  melt: "Bracket-fill target: each person withdraws RRSP/RRIF until their taxable income reaches this level (today's $). 0 = only RRIF minimums.",
+  meltUntil: 'Stop the bracket-fill at this age (0 = never stop).'
+};
+const tip = k => H[k] ? ` <i title="${H[k].replace(/"/g, '&quot;')}">ⓘ</i>` : '';
+
+function buildForm() {
+  const provOpts = Object.entries(PROV).map(([k, v]) => `<option value="${k}">${v.n}</option>`).join('');
+  const one = (id, label, type = 'number', extra = '', hk = id) => `<div class="row one"><label>${label}${tip(hk)}</label>${type === 'select' ? `<select id="${id}">${extra}</select>` : type === 'check' ? `<input type="checkbox" id="${id}" style="width:auto;justify-self:start">` : `<input id="${id}" type="${type}" ${extra}>`}</div>`;
+  const two = (key, label, hk = key) => `<div class="row"><label>${label}${tip(hk)}</label><input data-p="0" data-k="${key}" type="number"><input data-p="1" data-k="${key}" type="number" class="p2"></div>`;
+  const twoT = (key, label) => `<div class="row"><label>${label}</label><input data-p="0" data-k="${key}" type="text"><input data-p="1" data-k="${key}" type="text" class="p2"></div>`;
+  $('#form').innerHTML = `
+  <details open><summary>1 · Household</summary><div class="sec">
+    ${one('couple', 'Plan as a couple', 'check')}
+    ${one('prov', 'Province', 'select', provOpts)}
+    ${one('endAge', 'Plan to age')}
+    ${one('inflation', 'Inflation %', 'number', 'step="0.1"')}
+  </div></details>
+  <details open><summary>2 · People & accounts</summary><div class="sec">
+    <div class="row"><span></span><span class="hdr">Person 1</span><span class="hdr p2">Person 2</span></div>
+    ${twoT('name', 'Name')}
+    ${two('age', 'Current age')}${two('retAge', 'Retirement age')}
+    <div class="sub">Balances today</div>
+    ${two('rrsp', 'RRSP / RRIF / LIRA')}${two('tfsa', 'TFSA')}${two('tfsaRoom', 'Unused TFSA room')}
+    ${two('nonreg', 'Non-registered')}${two('nonregACB', 'Non-reg cost base')}
+    <div class="sub">Annual contributions until retirement (today's $)</div>
+    ${two('cRRSP', 'RRSP / yr')}${two('cTFSA', 'TFSA / yr')}${two('cNR', 'Non-reg / yr')}
+    <div class="sub">Income in retirement</div>
+    ${two('work', 'Work income / yr')}${two('workUntil', '…until age', 'work')}
+    ${two('cpp65', 'CPP at 65 / yr')}${two('oasYears', 'OAS residence yrs')}
+    ${two('db', 'DB pension / yr')}${two('dbStart', 'DB start age', 'db')}${two('dbIdx', 'DB indexing % CPI', 'db')}
+  </div></details>
+  <details open><summary>3 · Spending</summary><div class="sec">
+    ${one('spend', 'Annual spending (after tax)', 'number', 'step="1000"')}
+    ${one('slowAge', 'Slow-go starts at age', 'number', '', 'slow')}${one('slowMult', 'Slow-go spending %', 'number', '', 'slow')}
+    ${one('nogoAge', 'No-go starts at age', 'number', '', 'slow')}${one('nogoMult', 'No-go spending %', 'number', '', 'slow')}
+    ${one('oneTimes', 'One-time expenses', 'text', 'placeholder="55:60000, 62:45000"')}
+    ${one('downAge', 'Downsize home at age', 'number', '', 'down')}${one('downAmt', 'Net tax-free proceeds', 'number', 'step="10000"', 'down')}
+    ${one('estateTarget', 'Estate floor (for solver)', 'number', 'step="10000"')}
+  </div></details>
+  <details><summary>4 · Market & tax assumptions</summary><div class="sec">
+    ${one('ret', 'Expected return %', 'number', 'step="0.1"')}${one('vol', 'Volatility %', 'number', 'step="0.5"')}
+    ${one('nrYield', 'Non-reg distribution yield %', 'number', 'step="0.1"')}${one('nrElig', '% eligible Cdn dividends', 'number')}
+    ${one('tfsaLimit', 'TFSA annual limit (2026 $)', 'number', '', 'tfsaRoom')}
+    ${one('sims', 'Monte Carlo simulations', 'number', 'step="100"')}
+  </div></details>
+  <details open><summary>5 · Withdrawal strategy</summary><div class="sec">
+    ${one('mode', 'Mode', 'select', '<option value="auto">Auto-optimize (recommended)</option><option value="manual">Manual</option>')}
+    <div id="manualBox">
+    ${one('melt', 'RRSP bracket-fill to ($ taxable)', 'number', 'step="1000"')}
+    ${one('meltUntil', 'Stop bracket-fill at age')}
+    <div class="row"><label>CPP start age</label><input id="cpp0" type="number" min="60" max="70"><input id="cpp1" type="number" min="60" max="70" class="p2"></div>
+    <div class="row"><label>OAS start age</label><input id="oas0" type="number" min="65" max="70"><input id="oas1" type="number" min="65" max="70" class="p2"></div>
+    ${one('tfsaFirst', 'Draw TFSA before RRSP', 'check')}
+    </div>
+    <p class="note">Withdrawal order: RRIF minimums → bracket-fill → non-registered → RRSP → TFSA. Eligible pension income is split between spouses at 65+ automatically.</p>
+  </div></details>`;
+}
+const SCAL = ['endAge', 'inflation', 'spend', 'slowAge', 'slowMult', 'nogoAge', 'nogoMult', 'downAge', 'downAmt', 'estateTarget', 'ret', 'vol', 'nrYield', 'nrElig', 'tfsaLimit', 'sims', 'melt', 'meltUntil'];
+function toForm() {
+  for (const k of [...SCAL, 'prov', 'oneTimes', 'mode']) $('#' + k).value = M[k];
+  $('#couple').checked = M.couple; $('#tfsaFirst').checked = M.tfsaFirst;
+  [0, 1].forEach(i => { $('#cpp' + i).value = M.cpp[i]; $('#oas' + i).value = M.oas[i]; });
+  $$('[data-k]').forEach(el => el.value = M.p[+el.dataset.p][el.dataset.k]);
+  uiState();
+}
+function fromForm() {
+  for (const k of SCAL) M[k] = +$('#' + k).value || 0;
+  M.prov = $('#prov').value; M.oneTimes = $('#oneTimes').value; M.mode = $('#mode').value;
+  M.couple = $('#couple').checked; M.tfsaFirst = $('#tfsaFirst').checked;
+  [0, 1].forEach(i => { M.cpp[i] = Math.min(70, Math.max(60, +$('#cpp' + i).value || 65)); M.oas[i] = Math.min(70, Math.max(65, +$('#oas' + i).value || 65)); });
+  $$('[data-k]').forEach(el => { const v = el.dataset.k === 'name' ? el.value : (+el.value || 0); M.p[+el.dataset.p][el.dataset.k] = v; });
+  localStorage.setItem(STORE, JSON.stringify(M));
+  uiState();
+}
+function uiState() {
+  $$('.p2').forEach(e => e.style.visibility = M.couple ? 'visible' : 'hidden');
+  $('#manualBox').style.display = M.mode === 'manual' ? 'block' : 'none';
+}
+function inputs() {
+  const persons = M.p.slice(0, M.couple ? 2 : 1).map(p => ({ ...p, workUntil: p.workUntil || 0, dbIdx: (p.dbIdx || 0) / 100 }));
+  const oneTimes = String(M.oneTimes || '').split(/[,;\n]+/).map(s => s.split(':').map(x => +x.replace(/[^\d.]/g, ''))).filter(a => a.length === 2 && a[0] > 0).map(([age, amt]) => ({ age, amt }));
+  return {
+    prov: M.prov, inflation: M.inflation / 100, ret: M.ret / 100, vol: M.vol / 100, nrYield: M.nrYield / 100, nrElig: M.nrElig / 100, tfsaLimit: M.tfsaLimit,
+    endAge: Math.max(M.endAge, M.p[0].age + 1), spend: M.spend, slowAge: M.slowAge, slowMult: M.slowMult / 100, nogoAge: M.nogoAge, nogoMult: M.nogoMult / 100,
+    oneTimes, downAge: M.downAge, downAmt: M.downAmt, estateTarget: M.estateTarget, persons
+  };
+}
+const fixAges = (I, S) => ({ ...S, cpp: I.persons.map((p, i) => Math.max(S.cpp[i] ?? 65, Math.min(70, p.age))), oas: I.persons.map((p, i) => Math.max(S.oas[i] ?? 65, Math.min(70, p.age))) });
+
+// ---------- charts ----------
+function chart(cv, labels, series, o = {}) {
+  const box = cv.parentElement, tipEl = box.querySelector('.tip');
+  const dpr = window.devicePixelRatio || 1, W = box.clientWidth, Hh = box.clientHeight;
+  if (!W) return;
+  cv.width = W * dpr; cv.height = Hh * dpr; const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, Hh);
+  const L = 62, R = 12, T = 12, B = 30, pw = W - L - R, ph = Hh - T - B, n = labels.length;
+  const stacks = labels.map((_, i) => { let p = 0, ng = 0; series.filter(s => s.stack).forEach(s => { const v = s.data[i] || 0; if (v >= 0) p += v; else ng += v; }); return [ng, p]; });
+  const flat = series.filter(s => !s.stack).flatMap(s => s.band ? [...s.hi, ...s.lo] : s.data).map(v => v || 0);
+  let mx = Math.max(1, ...stacks.map(s => s[1]), ...flat);
+  let mn = Math.min(0, ...stacks.map(s => s[0]), ...flat);
+  const yf = o.yfmt || fk;
+  const step = niceStep((mx - mn) / 5); mx = Math.ceil(mx / step) * step; mn = Math.floor(mn / step) * step;
+  const X = i => L + (i + .5) * pw / n, Y = v => T + ph - (v - mn) / (mx - mn) * ph, bw = Math.max(1, pw / n * .78);
+  c.font = '11px Segoe UI,system-ui'; c.fillStyle = '#5b6577'; c.strokeStyle = '#e3e7ee'; c.lineWidth = 1;
+  for (let v = mn; v <= mx + 1e-6; v += step) { const y = Y(v); c.beginPath(); c.moveTo(L, y); c.lineTo(W - R, y); c.stroke(); c.textAlign = 'right'; c.fillText(yf(v), L - 6, y + 4); }
+  c.textAlign = 'center'; const every = Math.ceil(n / 16);
+  labels.forEach((lb, i) => { if (i % every === 0) c.fillText(lb, X(i), Hh - 10); });
+  if (o.shade) { c.fillStyle = '#5b657712'; c.fillRect(L, T, X(o.shade[1]) - L, ph); }
+  const base = labels.map(() => 0), nbase = labels.map(() => 0);
+  series.filter(s => s.stack).forEach(s => {
+    c.fillStyle = s.color;
+    if (s.type === 'area') {
+      c.beginPath(); labels.forEach((_, i) => { const y = Y(base[i] + (s.data[i] || 0)); i ? c.lineTo(X(i), y) : c.moveTo(X(i), y); });
+      for (let i = n - 1; i >= 0; i--) c.lineTo(X(i), Y(base[i])); c.closePath(); c.globalAlpha = .85; c.fill(); c.globalAlpha = 1;
+      labels.forEach((_, i) => base[i] += (s.data[i] || 0));
+    } else labels.forEach((_, i) => { const v = s.data[i] || 0; if (!v) return; if (v > 0) { c.fillRect(X(i) - bw / 2, Y(base[i] + v), bw, Y(base[i]) - Y(base[i] + v)); base[i] += v; } else { c.fillRect(X(i) - bw / 2, Y(nbase[i]), bw, Y(nbase[i] + v) - Y(nbase[i])); nbase[i] += v; } });
+  });
+  series.filter(s => s.band).forEach(s => { c.fillStyle = s.color; c.beginPath(); labels.forEach((_, i) => { const y = Y(s.hi[i]); i ? c.lineTo(X(i), y) : c.moveTo(X(i), y); }); for (let i = n - 1; i >= 0; i--) c.lineTo(X(i), Y(s.lo[i])); c.closePath(); c.fill(); });
+  series.filter(s => !s.stack && !s.band).forEach(s => { c.strokeStyle = s.color; c.lineWidth = s.w || 2.2; c.setLineDash(s.dash || []); c.beginPath(); labels.forEach((_, i) => { const y = Y(s.data[i] || 0); i ? c.lineTo(X(i), y) : c.moveTo(X(i), y); }); c.stroke(); c.setLineDash([]); });
+  if (mn < 0) { c.strokeStyle = '#14213d'; c.beginPath(); c.moveTo(L, Y(0)); c.lineTo(W - R, Y(0)); c.stroke(); }
+  cv.onmousemove = e => {
+    const r = cv.getBoundingClientRect(), x = e.clientX - r.left, i = Math.floor((x - L) / pw * n);
+    if (i < 0 || i >= n) { tipEl.style.display = 'none'; return; }
+    const lines = series.filter(s => !s.band && !s.hideTip).map(s => `<span style="color:${s.color === '#14213d' ? '#fff' : s.color}">■</span> ${s.name}: ${fmt(s.data[i] || 0)}`);
+    if (o.extraTip) lines.push(o.extraTip(i));
+    tipEl.innerHTML = `<b>${o.tipTitle ? o.tipTitle(i) : labels[i]}</b><br>` + lines.join('<br>');
+    tipEl.style.display = 'block'; const tw = tipEl.offsetWidth; tipEl.style.left = Math.min(W - tw - 4, Math.max(4, x + 14)) + 'px'; tipEl.style.top = '10px';
+  };
+  cv.onmouseleave = () => tipEl.style.display = 'none';
+}
+function niceStep(r) { const p = Math.pow(10, Math.floor(Math.log10(Math.max(r, 1)))), f = r / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
+const legend = (el, series) => $(el).innerHTML = series.map(s => `<span style="--c:${s.color}">${s.name}</span>`).join('');
+
+// ---------- main compute ----------
+let timer = null;
+function schedule() { clearTimeout(timer); timer = setTimeout(run, 280); }
+function run() {
+  fromForm();
+  const I = inputs();
+  const baseS = fixAges(I, { melt: 0, cpp: [65, 65], oas: [65, 65], tfsaFirst: false }), baseR = simulate(I, baseS);
+  let S, R;
+  if (M.mode === 'auto') { const o = optimize(I); S = o.S; R = o.r; }
+  else { S = fixAges(I, { melt: M.melt, meltUntil: M.meltUntil || 0, cpp: M.cpp, oas: M.oas, tfsaFirst: M.tfsaFirst }); R = simulate(I, S); }
+  const maxDet = maxSpend(I, S, 'det');
+  LAST = { I, S, R, baseS, baseR, maxDet, mc: null };
+  render();
+  $('#kpis').classList.add('busy');
+  setTimeout(() => { LAST.mc = monteCarlo(I, S, Math.max(100, Math.min(3000, M.sims)), 2026); $('#kpis').classList.remove('busy'); render(); setTimeout(compare, 20); }, 30);
+}
+function dv(x, row) { return VIEW === 'real' ? x / row.f : x; }
+function render() {
+  const { I, S, R, baseR, maxDet, mc } = LAST, rows = R.rows, P = I.persons, names = P.map(p => p.name || 'P');
+  const ret = rows.filter(r => r.phase === 'ret');
+  const firstRet = ret[0];
+  const avgRate = R.lifeTaxR / Math.max(1, ret.reduce((a, r) => a + (r.spend + r.tax) / r.f, 0)) * 100;
+  const succ = mc ? mc.success * 100 : null;
+  const sc = succ == null ? '' : succ >= 85 ? 'good' : succ >= 70 ? 'warn' : 'bad';
+  const gain = R.estateR - baseR.estateR;
+  $('#kpis').innerHTML = [
+    ['Plan success (Monte Carlo)', succ == null ? '…' : succ.toFixed(0) + '%', mc ? `${M.sims} market paths` : 'running…', sc],
+    ['Expected outcome', R.fail ? 'Runs short at ' + R.depleteAge : 'Fully funded', R.fail ? 'shortfall ' + fk(R.shortR) + ' (today $)' : 'to age ' + I.endAge + ' at ' + (M.ret).toFixed(1) + '% return', R.fail ? 'bad' : 'good'],
+    ['After-tax estate', fk(R.estateR), "today's $, median MC " + (mc ? fk(mc.estP50) : '…'), ''],
+    ['Lifetime tax', fk(R.lifeTaxR), avgRate.toFixed(1) + '% of gross cash need · incl. estate', ''],
+    ['Tax-optimization gain', (gain >= 0 ? '+' : '') + fk(gain), 'vs. conventional (non-reg → RRSP → TFSA, CPP/OAS 65)', gain > 0 ? 'good' : ''],
+    ['Max sustainable spending', fk(maxDet) + '/yr', 'expected returns, estate ≥ ' + fk(I.estateTarget), maxDet >= I.spend ? 'good' : 'bad']
+  ].map(([l, v, s, c]) => `<div class="kpi"><div class="l">${l}</div><div class="v ${c}">${v}</div><div class="s">${s}</div></div>`).join('');
+
+  const pl = [];
+  const meltTxt = S.melt > 0 ? `Withdraw from RRSP/RRIF each year so each person's taxable income reaches about <b>${fmt(S.melt)}</b> (today's $)${S.meltUntil ? ` until age ${S.meltUntil}` : ''}. In year 1 that is about <b>${fmt(firstRet ? firstRet.wRR / firstRet.f : 0)}</b> combined. This fills low brackets now and shrinks future RRIF minimums, OAS clawback and the tax on your estate.` : 'Do not accelerate RRSP withdrawals beyond the RRIF minimums — your projected income later in life is low enough that deferral wins.';
+  pl.push(['k', '<b>RRSP strategy.</b> ' + meltTxt]);
+  pl.push(['k', `<b>Government benefits.</b> ${P.map((p, i) => `${names[i]}: start CPP at <b>${S.cpp[i]}</b> and OAS at <b>${S.oas[i]}</b>`).join('; ')}. ${S.cpp.some(a => a > 65) ? 'Deferring CPP adds 8.4%/yr (inflation-indexed, for life) — your portfolio bridges the gap.' : ''}`]);
+  const lastNR = ret.filter(r => r.wNR > 1).pop();
+  pl.push(['', `<b>Spending order.</b> Cover the rest of your spending from non-registered accounts first${lastNR ? ` (lasts until about age ${lastNR.ages[0]})` : ''}, then RRSP, and keep the TFSA for last — it stays tax-free and doesn't count toward OAS clawback. Any surplus goes into TFSA room automatically.`]);
+  if (P.length === 2) { const sp = ret.filter(r => Math.abs(r.split) > 100); if (sp.length) pl.push(['', `<b>Pension income splitting</b> is used in ${sp.length} years (avg ${fk(sp.reduce((a, r) => a + Math.abs(r.split) / r.f, 0) / sp.length)}/yr moved to the lower-income spouse). File the joint election form T1032 every year.`]); }
+  if (R.clawR > 1000) pl.push(['w', `<b>OAS clawback</b> still costs about ${fk(R.clawR)} over the plan (today's $). The clawback starts at ${fmt(FED.oasThr)} of net income per person in 2026.`]);
+  const peak = ret.reduce((m, r) => Math.max(m, ...r.ti.map(x => x / r.f)), 0);
+  pl.push(['', `<b>Taxable income</b> peaks around ${fk(peak)} per person (today's $). Average tax drag on your gross cash needs is ${avgRate.toFixed(1)}%.`]);
+  if (mc && mc.success < .85) pl.push(['w', `<b>Risk check.</b> Only ${(mc.success * 100).toFixed(0)}% of market paths succeed. Try lowering spending toward ${fk(maxDet * .9)}, adding a slow-go phase, or using the solver on the Monte Carlo tab.`]);
+  if (R.fail) pl.push(['w', `<b>Shortfall.</b> At expected returns, money runs out at age ${R.depleteAge}. Reduce spending, retire later, or add income.`]);
+  $('#plan').innerHTML = pl.map(([c, t]) => `<div class="${c}">${t}</div>`).join('');
+
+  const lab = rows.map(r => String(r.ages[0])), tt = i => `Age ${rows[i].ages.join(' / ')} · ${2026 + rows[i].t}`;
+  const accEnd = rows.findIndex(r => r.phase === 'ret');
+  const shade = accEnd > 0 ? [0, accEnd] : null;
+  const s1 = [
+    { name: 'RRSP / RRIF', color: '#1f4e79', type: 'area', stack: 1, data: rows.map(r => dv(r.rr, r)) },
+    { name: 'Non-registered', color: '#4f81bd', type: 'area', stack: 1, data: rows.map(r => dv(r.nr, r)) },
+    { name: 'TFSA', color: '#9bbb59', type: 'area', stack: 1, data: rows.map(r => dv(r.tf, r)) }];
+  chart($('#cNW'), lab, s1, { tipTitle: tt, extraTip: i => `<b>Total: ${fmt(dv(rows[i].nw, rows[i]))}</b>`, shade }); legend('#lNW', s1);
+  const s2 = [
+    { name: 'CPP', color: '#1f4e79', stack: 1, data: rows.map(r => dv(r.cpp, r)) },
+    { name: 'OAS', color: '#2aa198', stack: 1, data: rows.map(r => dv(r.oas, r)) },
+    { name: 'DB pension', color: '#7f6aa8', stack: 1, data: rows.map(r => dv(r.db, r)) },
+    { name: 'Work / other', color: '#8c8c8c', stack: 1, data: rows.map(r => dv(r.work + r.other, r)) },
+    { name: 'Non-reg distributions', color: '#9fc5e8', stack: 1, data: rows.map(r => dv(r.dist, r)) },
+    { name: 'RRSP/RRIF withdrawals', color: '#c8102e', stack: 1, data: rows.map(r => dv(r.wRR, r)) },
+    { name: 'Non-reg withdrawals', color: '#4f81bd', stack: 1, data: rows.map(r => dv(r.wNR, r)) },
+    { name: 'TFSA withdrawals', color: '#9bbb59', stack: 1, data: rows.map(r => dv(r.wTF, r)) },
+    { name: 'Spending + tax', color: '#14213d', data: rows.map(r => dv(r.spend + r.tax, r)), w: 2.5 }];
+  chart($('#cCF'), lab, s2, { tipTitle: tt, extraTip: i => `Spending: ${fmt(dv(rows[i].spend, rows[i]))} · Tax: ${fmt(dv(rows[i].tax, rows[i]))}${rows[i].invest > 1 ? ' · Reinvested: ' + fmt(dv(rows[i].invest, rows[i])) : ''}`, shade }); legend('#lCF', s2);
+  const s3 = [
+    { name: 'Income tax', color: '#c8102e', stack: 1, data: rows.map(r => dv(r.tax - r.claw, r)) },
+    { name: 'OAS clawback', color: '#f2a541', stack: 1, data: rows.map(r => dv(r.claw, r)) },
+    { name: 'Conventional plan tax', color: '#14213d', dash: [5, 4], data: baseR.rows.map(r => dv(r.tax, r)) }];
+  P.forEach((p, i) => s3.push({ name: names[i] + ' taxable income', color: i ? '#9bbb59' : '#4f81bd', data: rows.map(r => dv(r.ti[i] || 0, r)), w: 1.5, dash: [2, 3] }));
+  chart($('#cTax'), lab, s3, { tipTitle: tt }); legend('#lTax', s3);
+  $('#taxNote').innerHTML = `Dashed black line = annual tax under the conventional approach. The optimized plan usually pays <i>more</i> tax early (filling low brackets) to pay much less later and at death. Estate tax at end of plan: ${fk(R.estateTaxR)} vs ${fk(baseR.estateTaxR)} conventional (today's $).`;
+  if (mc) {
+    const toV = arr => arr.map((v, i) => VIEW === 'real' ? v : v * rows[i].f);
+    const b = mc.bands.map(toV);
+    const s4 = [{ name: '10th–90th pct', color: '#4f81bd33', band: 1, lo: b[0], hi: b[4], hideTip: 1 }, { name: '25th–75th pct', color: '#4f81bd55', band: 1, lo: b[1], hi: b[3], hideTip: 1 },
+    { name: '90th pct', color: '#9bbb59', data: b[4], w: 1.2 }, { name: '75th pct', color: '#4f81bd', data: b[3], w: 1 }, { name: 'Median', color: '#1f4e79', data: b[2], w: 2.5 }, { name: '25th pct', color: '#f2a541', data: b[1], w: 1 }, { name: '10th pct', color: '#c8102e', data: b[0], w: 1.2 }];
+    chart($('#cMC'), lab, s4, { tipTitle: tt }); legend('#lMC', s4);
+  }
+  table();
+}
+function table() {
+  const { R, I } = LAST, rows = R.rows, P = I.persons;
+  const cols = [['Year', r => 2026 + r.t, 1], ['Age(s)', r => r.ages.join('/'), 1], ['Spending', r => r.spend], ['CPP', r => r.cpp], ['OAS', r => r.oas], ['DB', r => r.db], ['Work/other', r => r.work + r.other], ['Distrib.', r => r.dist],
+  ['RRSP/RRIF', r => r.wRR], ['Non-reg', r => r.wNR], ['TFSA', r => r.wTF], ...P.map((p, i) => [(p.name || 'P' + (i + 1)) + ' taxable', r => r.ti[i] || 0]), ['Split', r => Math.abs(r.split)], ['Income tax', r => r.tax - r.claw], ['OAS clawback', r => r.claw], ['Reinvested', r => r.invest], ['Shortfall', r => r.short],
+  ['RRSP bal', r => r.rr], ['Non-reg bal', r => r.nr], ['TFSA bal', r => r.tf], ['Net worth', r => r.nw]];
+  LAST.cols = cols;
+  $('#tYr').innerHTML = `<thead><tr>${cols.map(c => `<th>${c[0]}</th>`).join('')}</tr></thead><tbody>` + rows.map(r => `<tr class="${r.phase === 'acc' ? 'acc' : r.short > 1 ? 'sh' : ''}">${cols.map(c => `<td>${c[2] ? c[1](r) : fmt(dv(c[1](r), r))}</td>`).join('')}</tr>`).join('') + '</tbody>';
+}
+function compare() {
+  const { I, S } = LAST; const sims = Math.max(100, Math.min(250, Math.round(M.sims / 2)));
+  const cands = [
+    ['Conventional: non-reg → RRSP → TFSA, CPP & OAS at 65', { melt: 0, cpp: [65, 65], oas: [65, 65] }],
+    ['Take CPP early (60), OAS 65, no meltdown', { melt: 0, cpp: [60, 60], oas: [65, 65] }],
+    ['Defer CPP & OAS to 70, no meltdown', { melt: 0, cpp: [70, 70], oas: [70, 70] }],
+    ['Meltdown to top of 1st federal bracket, CPP/OAS 65', { melt: 58523, cpp: [65, 65], oas: [65, 65] }],
+    ['Meltdown to OAS clawback threshold, CPP/OAS 70', { melt: 95323, cpp: [70, 70], oas: [70, 70] }],
+    [(M.mode === 'auto' ? '★ Optimized: ' : '★ Your manual plan: ') + `fill to ${fk(S.melt)}${S.meltUntil ? ' until ' + S.meltUntil : ''}, CPP ${S.cpp.join('/')}, OAS ${S.oas.join('/')}`, S, true]];
+  const out = cands.map(([n, s, best]) => { const SS = fixAges(I, { tfsaFirst: false, ...s }); const r = simulate(I, SS); const mc = monteCarlo(I, SS, sims, 99); return { n, r, mc, best }; });
+  $('#tCmp').innerHTML = `<thead><tr><th>Strategy</th><th>After-tax estate</th><th>Lifetime tax</th><th>OAS clawback</th><th>Runs short?</th><th>Success (${sims} paths)</th><th>Median MC estate</th></tr></thead><tbody>` +
+    out.map(o => `<tr class="${o.best ? 'best' : ''}"><td>${o.n}</td><td>${fmt(o.r.estateR)}</td><td>${fmt(o.r.lifeTaxR)}</td><td>${fmt(o.r.clawR)}</td><td>${o.r.fail ? 'Age ' + o.r.depleteAge : 'No'}</td><td>${(o.mc.success * 100).toFixed(0)}%</td><td>${fmt(o.mc.estP50)}</td></tr>`).join('') + '</tbody>';
+}
+
+// ---------- events ----------
+buildForm(); toForm();
+$('#form').addEventListener('input', schedule); $('#form').addEventListener('change', schedule);
+$$('#tabs button').forEach(b => b.onclick = () => { $$('#tabs button').forEach(x => x.classList.toggle('on', x === b)); $$('.pane').forEach(p => p.classList.toggle('on', p.id === b.dataset.p)); if (LAST) render(); });
+$$('#dollarSeg button').forEach(b => b.onclick = () => { VIEW = b.dataset.v; $$('#dollarSeg button').forEach(x => x.classList.toggle('on', x === b)); render(); });
+$('#bReset').onclick = () => { if (confirm('Replace your inputs with the sample plan?')) { M = structuredClone(SAMPLE); toForm(); run(); } };
+$('#bSave').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(M, null, 2)], { type: 'application/json' })); a.download = 'canfire-plan.json'; a.click(); };
+$('#fLoad').onchange = e => { const f = e.target.files[0]; if (!f) return; f.text().then(t => { M = { ...structuredClone(SAMPLE), ...JSON.parse(t) }; toForm(); run(); }); };
+$('#bCSV').onclick = () => { const { R, cols } = LAST; const lines = [cols.map(c => c[0]).join(',')].concat(R.rows.map(r => cols.map(c => c[2] ? `"${c[1](r)}"` : Math.round(dv(c[1](r), r))).join(','))); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' })); a.download = `canfire-${VIEW}.csv`; a.click(); };
+$('#bSolve').onclick = () => { $('#solveOut').textContent = 'Solving… (a few seconds)'; setTimeout(() => { const { I, S } = LAST; const t = Math.min(99, Math.max(50, +$('#succT').value || 90)) / 100; const v = maxSpend(I, S, 'mc', t, 300); $('#solveOut').innerHTML = `→ <b>${fmt(v)}/yr</b> (today's $) gives ~${(t * 100).toFixed(0)}% success with this strategy. <a href="#" id="applyS">Apply</a>`; $('#applyS').onclick = ev => { ev.preventDefault(); $('#spend').value = Math.round(v / 500) * 500; run(); }; }, 30); };
+window.addEventListener('resize', () => LAST && render());
+$('#how').innerHTML = `
+<h3>What the engine models</h3>
+<ul>
+<li><b>2026 tax rules:</b> federal brackets (14% first bracket), the high-income BPA phase-out, provincial/territorial brackets and BPAs for every province and territory, age amount with income test, pension income credit, Saskatchewan senior supplement, Ontario surtax &amp; health premium, Quebec federal abatement, eligible-dividend gross-up and credits, and the 50% capital-gains inclusion rate. Brackets and credits are indexed with inflation each year.</li>
+<li><b>OAS:</b> 0.6%/month deferral bonus to 70, 10% top-up at 75, partial OAS by residence years, and the 15% recovery tax above the 2026 threshold of ${fmt(FED.oasThr)}.</li>
+<li><b>CPP:</b> −0.6%/month before 65, +0.7%/month after 65 (to 70), fully indexed.</li>
+<li><b>RRSP/RRIF:</b> RRIF minimums starting the year after turning 71 (CRA factors); optional bracket-fill ("meltdown") withdrawals.</li>
+<li><b>Pension splitting:</b> each year it tests splitting up to 50% of eligible pension income (RRIF at 65+, DB pension at any age) and keeps whichever split gives the lowest household tax.</li>
+<li><b>TFSA:</b> new room each year ($7,000 indexed) plus re-contribution room from prior-year withdrawals; surplus cash fills the TFSA first.</li>
+<li><b>Non-registered:</b> annual taxable distributions plus adjusted cost base tracking so each sale realizes the right capital gain.</li>
+<li><b>Estate:</b> at the end of the plan, the full RRSP/RRIF balance and all unrealized gains are taxed as income (deemed disposition), and the after-tax estate is reported.</li>
+<li><b>Auto-optimizer:</b> tests 9 bracket-fill levels × CPP ages 60/65/70 × OAS ages 65/70 for each spouse, plus stopping the meltdown at 65 or 72, then fine-tunes the best level. It picks the strategy with the largest after-tax estate that never runs short at expected returns.</li>
+<li><b>Monte Carlo:</b> lognormal annual returns using your expected return and volatility, with a fixed random seed so results don't jump around between runs.</li>
+</ul>
+<h3>Simplifications to know</h3>
+<ul>
+<li>Both spouses are assumed to live to the end of the plan; survivor benefits and the first death are not modelled separately.</li>
+<li>LIRA/LIF maximum withdrawals, GIS, the CPP post-retirement benefit, provincial tax reductions and low-income credits, AMT, foreign withholding tax, and US estate tax are not modelled. Provincial age and pension credit amounts are close approximations.</li>
+<li>Before retirement it only adds contributions and growth; it doesn't model employment tax or RRSP refunds.</li>
+<li>All accounts use the same expected return (no asset location by account). Withdrawals happen at the start of each year.</li>
+<li>This is a planning tool, not tax or investment advice. Confirm major decisions with a CFP or tax professional.</li>
+</ul>`;
+run();
+</script>
+</body>
+</html>
